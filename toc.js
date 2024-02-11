@@ -8,7 +8,7 @@
     const fs = require("node:fs");
 
     // ファイル内のコンテンツを取得する
-    const ABSOLUTE_PATH_TO_OBSIDIAN = "";
+    const ABSOLUTE_PATH_TO_OBSIDIAN = Proparty.toc.absolutePathToObsidian;
     const absolutePath = ABSOLUTE_PATH_TO_OBSIDIAN + path;
     const contents = fs.readFileSync(absolutePath, { encoding: "utf8" });
 
