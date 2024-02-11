@@ -1,19 +1,17 @@
 ﻿class SendToSlack {
   #FS = require("node:fs");
   /** Obsidianディレクトリまでの絶対パス */
-  #ABSOLUTE_PATH_TO_OBSIDIAN = "";
+  #ABSOLUTE_PATH_TO_OBSIDIAN = Proparty.sendToSlack.absolutePathToObsidian;
   /** リンクを保管しているcsvファイルの相対パス */
-  #RELATIVE_CSV_PATH = "";
+  #RELATIVE_CSV_PATH = Proparty.sendToSlack.relativeCsvPath;
   /** ファイル内のリンクを抽出するための正規表現 */
-  #REG_EXP_LINK = /^(https:).*/gm;
+  #REG_EXP_LINK = Proparty.sendToSlack.regExpLink;
   /** 送信先のSlack App(Incoming Webhooks)のURL */
-  #SLACK_URL = "";
-  // テスト用
-  // "";
+  #SLACK_URL = Proparty.sendToSlack.slackUrl;
 
   /**
    * pathのファイル内に記載されているURLをslackに送信する。
-   * @param {string} path https://~~~
+   * @param {string} path
    */
   sendToSlack(path) {
     // リンクを記載しているファイルまでの絶対パス
@@ -23,8 +21,54 @@
       encoding: "utf8",
     });
 
-    // コンテンツ内のリンクのみを取得する
-    const contentsLinkList = contents.match(this.#REG_EXP_LINK);
+    // コンテンツ内のcardlinkのみを取得する
+    const contentsCardLinkList = contents.match(this.#REG_EXP_LINK);
+
+    // コンテンツ内にリンクがない場合は処理を終了
+    if (contentsCardLinkList === null) {
+      return;
+    }
+
+    // cardlinkをオブジェクトに変換する
+    const contentsLinkList = contentsCardLinkList.map((cardlink) => {
+      const propertyList = cardlink.split("\n");
+
+      const url = propertyList.find((property) => property.includes("url: "));
+      const urlStringOfIndex = url?.indexOf(": ") + 2;
+
+      const title = propertyList.find((property) =>
+        property.includes("title: ")
+      );
+      const titleStringOfIndex = title?.indexOf(": ") + 2;
+
+      const description = propertyList.find((property) =>
+        property.includes("description: ")
+      );
+      const descriptionStringOfIndex = description?.indexOf(": ") + 2;
+
+      const favicon = propertyList.find((property) =>
+        property.includes("favicon: ")
+      );
+      const faviconStringOfIndex = favicon?.indexOf(": ") + 2;
+      const faviconUrl = favicon?.substring(faviconStringOfIndex);
+      const shortFavicon = faviconUrl?.substring(0, faviconUrl?.indexOf("?"));
+
+      const image = propertyList.find((property) =>
+        property.includes("image: ")
+      );
+      const imageStringOfIndex = image?.indexOf(": ") + 2;
+      const imageUrl = image?.substring(imageStringOfIndex);
+      const shortImage = imageUrl?.substring(0, imageUrl?.indexOf("?"));
+
+      return {
+        url: url?.substring(urlStringOfIndex) || "",
+        title: title?.substring(titleStringOfIndex).slice(1, -1) || "",
+        description:
+          description?.substring(descriptionStringOfIndex).slice(1, -1) || "",
+        favicon: shortFavicon === "" ? faviconUrl : shortFavicon,
+        image: shortImage === "" ? imageUrl : shortImage,
+      };
+    });
 
     // リンクを保管しているcsvファイルを読み込む
     const csvData = this.#FS.readFileSync(
@@ -45,27 +89,42 @@
       return record;
     });
     // csvファイル内のURLのみを抽出した配列
-    const csvUrlList = csvRecords.map((csvRecord) => csvRecord["URL"]);
+    const csvUrlList = csvRecords.map((csvRecord) => csvRecord["url"]);
+
     // csvファイルに無い（まだslackに送っていない）URL配列
-    const sendedUrlList = contentsLinkList.filter(
-      (contentsLink) => !csvUrlList.includes(contentsLink)
+    const sendedCardlinkList = contentsLinkList.filter(
+      (contentsLink) => !csvUrlList.includes(contentsLink.url)
     );
 
     // slackに送るリンクがない場合は、処理を終了
-    if (sendedUrlList.length === 0) {
+    if (sendedCardlinkList.length === 0) {
       return;
     }
 
     //　Slackへ送るテンプレート（Blocks kit）
     // https://app.slack.com/block-kit-builder/T0322TQRSR0#%7B%22blocks%22:%5B%5D%7D
-    const data = {
+    const payload = {
       text: "",
-      blocks: sendedUrlList.map((url) => {
+      blocks: sendedCardlinkList.map((cardlink) => {
+        if (cardlink.image || cardlink.favicon) {
+          return {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*<${cardlink.url}|${cardlink.title}>*\n${cardlink.description}`,
+            },
+            accessory: {
+              type: "image",
+              image_url: cardlink.image || cardlink.favicon,
+              alt_text: cardlink.title,
+            },
+          };
+        }
         return {
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `<${url}>`,
+            text: `*<${cardlink.url}|${cardlink.title}>*\n${cardlink.description}`,
           },
         };
       }),
@@ -78,15 +137,15 @@
       "content-type",
       "application/x-www-form-urlencoded;charset=UTF-8"
     );
-    xml.send(`payload=${JSON.stringify(data)}`);
+    xml.send(`payload=${JSON.stringify(payload)}`);
 
     // csvファイルに存在しないリンクを追加する
     const stream = this.#FS.createWriteStream(
       `${this.#ABSOLUTE_PATH_TO_OBSIDIAN}${this.#RELATIVE_CSV_PATH}`
     );
     stream.write(csvData.trim());
-    sendedUrlList.forEach((sendUrl, index) => {
-      stream.write("\n" + (csvRecords.length + 1 + index) + "," + sendUrl);
+    sendedCardlinkList.forEach((sendUrl, index) => {
+      stream.write("\n" + (csvRecords.length + 1 + index) + "," + sendUrl.url);
     });
 
     stream.end();
