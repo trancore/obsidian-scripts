@@ -1,13 +1,13 @@
 ﻿class SendToSlack {
   #FS = require("node:fs");
   /** Obsidianディレクトリまでの絶対パス */
-  #ABSOLUTE_PATH_TO_OBSIDIAN = Proparty.sendToSlack.absolutePathToObsidian;
+  #ABSOLUTE_PATH_TO_OBSIDIAN = "";
   /** リンクを保管しているcsvファイルの相対パス */
-  #RELATIVE_CSV_PATH = Proparty.sendToSlack.relativeCsvPath;
+  #RELATIVE_CSV_PATH = "";
   /** ファイル内のリンクを抽出するための正規表現 */
-  #REG_EXP_LINK = Proparty.sendToSlack.regExpLink;
+  #REG_EXP_LINK = "";
   /** 送信先のSlack App(Incoming Webhooks)のURL */
-  #SLACK_URL = Proparty.sendToSlack.slackUrl;
+  #SLACK_URL = "";
 
   /**
    * pathのファイル内に記載されているURLをslackに送信する。
