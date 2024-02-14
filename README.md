@@ -8,30 +8,6 @@ Obsidian で JavaScript を実行するには、[CustomJS](https://github.com/sa
 
 （TODO：記事を作成する）
 
-# 環境変数
-
-個人に依存するような変数や定数は、`Property`クラスを作って管理しています。
-
-例えば、以下のように設定しています。
-
-```javascript
-class Proparty {
-  static sendToSlack = {
-    absolutePathToObsidian: "hoge",
-    /** リンクを保管しているcsvファイルの相対パス */
-    relativeCsvPath: "fuga",
-
-    // ...etc
-  };
-
-  static toc = {
-    absolutePathToObsidian: "hogefuga",
-
-    // ...etc
-  };
-}
-```
-
 # send-to-slack.js
 
 ## 概要
