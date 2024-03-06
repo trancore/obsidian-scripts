@@ -106,6 +106,11 @@
     const payload = {
       text: "",
       blocks: sendedCardlinkList.map((cardlink) => {
+        const shortDescription =
+          cardlink.description.length > 102
+            ? cardlink.description.substring(0, 102).concat("", "...")
+            : cardlink.description;
+
         if (cardlink.image || cardlink.favicon) {
           return {
             type: "section",
