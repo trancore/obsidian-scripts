@@ -116,7 +116,7 @@
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `*<${cardlink.url}|${cardlink.title}>*\n${cardlink.description}`,
+              text: `*<${cardlink.url}|${cardlink.title}>*\n${shortDescription}`,
             },
             accessory: {
               type: "image",
@@ -129,7 +129,7 @@
           type: "section",
           text: {
             type: "mrkdwn",
-            text: `*<${cardlink.url}|${cardlink.title}>*\n${cardlink.description}`,
+            text: `*<${cardlink.url}|${cardlink.title}>*\n${shortDescription}`,
           },
         };
       }),
@@ -154,5 +154,7 @@
     });
 
     stream.end();
+
+    new Notice("送信完了");
   }
 }
