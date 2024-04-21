@@ -1,21 +1,31 @@
 ﻿class SendToSlack {
-  #FS = require("node:fs");
+  #FS = require("fs");
   /** Obsidianディレクトリまでの絶対パス */
-  #ABSOLUTE_PATH_TO_OBSIDIAN = "";
+  #ABSOLUTE_PATH_TO_OBSIDIAN_PC = "";
+  /** Obsidianディレクトリまでの絶対パス */
+  #ABSOLUTE_PATH_TO_OBSIDIAN_SP = "";
   /** リンクを保管しているcsvファイルの相対パス */
   #RELATIVE_CSV_PATH = "";
   /** ファイル内のリンクを抽出するための正規表現 */
-  #REG_EXP_LINK = "";
+  #REG_EXP_LINK = /(\`\`\`cardlink)(.*?)(\`\`\`)/gms;
   /** 送信先のSlack App(Incoming Webhooks)のURL */
   #SLACK_URL = "";
 
   /**
    * pathのファイル内に記載されているURLをslackに送信する。
    * @param {string} path
+   * @param {string} device
    */
-  sendToSlack(path) {
+  sendToSlack(path, device) {
+    if (device === "android") {
+      new Notice("送信できません");
+      return;
+    }
+
+    const devicePath = this.#ABSOLUTE_PATH_TO_OBSIDIAN_PC;
+
     // リンクを記載しているファイルまでの絶対パス
-    const absolutePath = this.#ABSOLUTE_PATH_TO_OBSIDIAN + "/" + path;
+    const absolutePath = devicePath + "/" + path;
     // ファイル内のコンテンツを取得する
     const contents = this.#FS.readFileSync(absolutePath, {
       encoding: "utf8",
@@ -72,7 +82,7 @@
 
     // リンクを保管しているcsvファイルを読み込む
     const csvData = this.#FS.readFileSync(
-      `${this.#ABSOLUTE_PATH_TO_OBSIDIAN}${this.#RELATIVE_CSV_PATH}`,
+      `${this.#ABSOLUTE_PATH_TO_OBSIDIAN_PC}${this.#RELATIVE_CSV_PATH}`,
       { encoding: "utf8" }
     );
     // 改行文字で分割し、各行を配列に変換する
@@ -146,7 +156,7 @@
 
     // csvファイルに存在しないリンクを追加する
     const stream = this.#FS.createWriteStream(
-      `${this.#ABSOLUTE_PATH_TO_OBSIDIAN}${this.#RELATIVE_CSV_PATH}`
+      `${devicePath}${this.#RELATIVE_CSV_PATH}`
     );
     stream.write(csvData.trim());
     sendedCardlinkList.forEach((sendUrl, index) => {
