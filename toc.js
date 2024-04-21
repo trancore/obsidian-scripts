@@ -24,6 +24,15 @@
       return heading.replace(REG_EXP_HEADING_TITLE, "");
     });
 
-    return { headingList, headingTitleList };
+    const markdownList = headingList.map((heading, index) => {
+      const headingHash = heading.split(" ")[0];
+      const headingNumber = headingHash.length;
+      const indent = "-  ".repeat(headingNumber);
+      return `${headingNumber > 0 && `${indent}##### `}[${
+        headingTitleList[index]
+      }](${heading.replace(" ", "")})`;
+    });
+
+    return { markdownList };
   }
 }

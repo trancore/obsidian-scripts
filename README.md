@@ -52,8 +52,6 @@ Markdown 形式で記載したノートの目次(table of contents: toc)を表�
 
 Markdown 記法での`#`, `##`, `###`, `####`を検出することで、リストのリンクに変換して表示を行います。
 
-（この README を書いているときに気づきましたが、`#`, `##`, `###`, `####`を上げることでインデントを順に下げる処理が入っていないことに気づきました。。いつか対応する予定です。。）
-
 ただ、そもそも Obsidian の機能として目次を表示する機能があったので、それを使ったほうが良いです。。。
 
 ## 使い方
@@ -65,9 +63,9 @@ const name = dv.current().file.name
 const path = dv.current().file.path
 const toc = TableOfContents.getTOC(path, name)
 
-dv.list(toc.headingList.map((heading ,index) =>
-    dv.sectionLink(name, heading, false, toc.headingTitleList[index])
-));
+dv.header(3, "目次");
+dv.paragraph(toc.markdownList);
+
 ```; ←（カンマは不要です）
 ````
 
